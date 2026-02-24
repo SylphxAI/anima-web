@@ -89,12 +89,12 @@ body {
 }
 
 .animate-fade-in-up {
-	animation: fadeInUp 0.8s ease forwards;
+	animation: fadeInUp 0.8s ease both;
 	opacity: 0;
 }
 
 .animate-fade-in {
-	animation: fadeIn 1s ease forwards;
+	animation: fadeIn 1s ease both;
 	opacity: 0;
 }
 
@@ -130,13 +130,22 @@ body {
 }
 
 .reveal {
-	animation: revealOnScroll 0.7s ease forwards;
+	animation: revealOnScroll 0.7s ease both;
 	opacity: 0;
 }
 
 /* Trigger reveal on page load via IntersectionObserver fallback in JS */
 .reveal.visible {
 	opacity: 1;
+}
+
+/* noscript / no-JS fallback: make all animated elements visible */
+.no-js .animate-fade-in-up,
+.no-js .animate-fade-in,
+.no-js .reveal {
+	opacity: 1 !important;
+	animation: none !important;
+	transform: none !important;
 }
 
 /* Gradient text */
