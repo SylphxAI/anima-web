@@ -218,11 +218,20 @@ section {
 
 /* Grid background */
 .grid-bg {
+	position: relative;
+}
+
+.grid-bg::before {
+	content: "";
+	position: absolute;
+	inset: 0;
 	background-image:
 		linear-gradient(rgba(99, 102, 241, 0.06) 1px, transparent 1px),
 		linear-gradient(90deg, rgba(99, 102, 241, 0.06) 1px, transparent 1px);
 	background-size: 60px 60px;
 	animation: gridPulse 6s ease-in-out infinite;
+	pointer-events: none;
+	z-index: 0;
 }
 
 /* Orb */
