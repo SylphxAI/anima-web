@@ -2,7 +2,7 @@ FROM node:22-alpine AS base
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock* bun.lockb* ./
 RUN npm install -g bun && bun install --frozen-lockfile
 
 FROM base AS builder
