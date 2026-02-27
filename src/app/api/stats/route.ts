@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { animaInstances } from "@/lib/db/schema";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
 	const rows = await db.select().from(animaInstances).where(eq(animaInstances.status, "active"));
