@@ -5,41 +5,13 @@ on:
     branches: [main]
 
 jobs:
-  build:
-    runs-on: [self-hosted, linux, x64]
+  deploy:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Build & push Docker image
+      - name: Trigger Coolify redeployment
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker build -t ghcr.io/sylphxai/anima-web:latest .
-          docker push ghcr.io/sylphxai/anima-web:latest
-
-      - name: Deploy container
-        run: |
-          docker pull ghcr.io/sylphxai/anima-web:latest
-          docker stop anima-web 2>/dev/null || true
-          docker rm anima-web 2>/dev/null || true
-          docker run -d \
-            --name anima-web \
-            --network coolify \
-            --restart unless-stopped \
-            --ulimit nofile=65535:65535 \
-            -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-            -e ADMIN_SECRET="${{ secrets.ADMIN_SECRET }}" \
-            -e ENCRYPTION_SECRET="${{ secrets.ENCRYPTION_SECRET }}" \
-            -e PORT=3000 \
-            -e NODE_ENV=production \
-            -l "traefik.enable=true" \
-            -l "traefik.http.routers.anima-web.rule=Host(\`anima.sylphx.com\`)" \
-            -l "traefik.http.routers.anima-web.entrypoints=https" \
-            -l "traefik.http.routers.anima-web.tls=true" \
-            -l "traefik.http.routers.anima-web.tls.certresolver=letsencrypt" \
-            -l "traefik.http.services.anima-web.loadbalancer.server.port=3000" \
-            ghcr.io/sylphxai/anima-web:latest
-
-      - name: Run DB migrations
-        run: |
-          sleep 5
-          docker exec anima-web bun run db:migrate || docker exec anima-web bunx drizzle-kit migrate
+          RESPONSE=$(curl -s -X GET \
+            "https://coolify.sylphx.com/api/v1/applications/gg00c4s4w0okg40g04wo08k0/start" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}")
+          echo "Coolify response: $RESPONSE"
+          echo "$RESPONSE" | grep -q "deployment_uuid" && echo "✅ Deployment queued" || (echo "❌ Failed" && exit 1)
