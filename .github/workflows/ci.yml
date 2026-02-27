@@ -25,4 +25,21 @@ jobs:
             --name anima-web \
             --network coolify \
             --restart unless-stopped \
+            --ulimit nofile=65535:65535 \
+            -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+            -e ADMIN_SECRET="${{ secrets.ADMIN_SECRET }}" \
+            -e ENCRYPTION_SECRET="${{ secrets.ENCRYPTION_SECRET }}" \
+            -e PORT=3000 \
+            -e NODE_ENV=production \
+            -l "traefik.enable=true" \
+            -l "traefik.http.routers.anima-web.rule=Host(\`anima.sylphx.com\`)" \
+            -l "traefik.http.routers.anima-web.entrypoints=https" \
+            -l "traefik.http.routers.anima-web.tls=true" \
+            -l "traefik.http.routers.anima-web.tls.certresolver=letsencrypt" \
+            -l "traefik.http.services.anima-web.loadbalancer.server.port=3000" \
             ghcr.io/sylphxai/anima-web:latest
+
+      - name: Run DB migrations
+        run: |
+          sleep 5
+          docker exec anima-web bun run db:migrate || docker exec anima-web bunx drizzle-kit migrate
