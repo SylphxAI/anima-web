@@ -1,4 +1,30 @@
-export default function Home() {
+function formatNum(n: number): string {
+	if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+	if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+	return String(n);
+}
+
+interface Stats {
+	instances: number;
+	totalMessages: number;
+	totalUsers: number;
+	orgs: number;
+}
+
+export default async function Home() {
+	let stats: Stats = { instances: 0, totalMessages: 0, totalUsers: 0, orgs: 0 };
+	try {
+		const res = await fetch(
+			`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://anima.sylphx.com"}/api/stats`,
+			{
+				next: { revalidate: 60 },
+			},
+		);
+		if (res.ok) stats = await res.json();
+	} catch {
+		// silently fall back to zeros
+	}
+
 	return (
 		<>
 			{/* Navigation */}
@@ -258,6 +284,61 @@ export default function Home() {
 								</defs>
 							</svg>
 						</div>
+					</div>
+				</section>
+
+				{/* ─────────────────────────────── STATS BAR ─────────────────────────────── */}
+				<section
+					style={{
+						background: "rgba(99,102,241,0.04)",
+						borderTop: "1px solid rgba(99,102,241,0.12)",
+						borderBottom: "1px solid rgba(99,102,241,0.12)",
+						padding: "2.5rem 1.5rem",
+					}}
+				>
+					<div
+						style={{
+							maxWidth: "900px",
+							margin: "0 auto",
+							display: "grid",
+							gridTemplateColumns: "repeat(3, 1fr)",
+							gap: "2rem",
+							textAlign: "center",
+						}}
+					>
+						{[
+							{ label: "Agents Running", value: formatNum(stats.instances) },
+							{ label: "Messages Processed", value: formatNum(stats.totalMessages) },
+							{ label: "Organisations Served", value: formatNum(stats.orgs) },
+						].map((s) => (
+							<div key={s.label}>
+								<div
+									style={{
+										fontSize: "clamp(2rem, 4vw, 2.75rem)",
+										fontWeight: 800,
+										letterSpacing: "-0.03em",
+										background: "linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%)",
+										WebkitBackgroundClip: "text",
+										WebkitTextFillColor: "transparent",
+										backgroundClip: "text",
+										lineHeight: 1.1,
+										marginBottom: "0.5rem",
+									}}
+								>
+									{s.value}
+								</div>
+								<div
+									style={{
+										color: "var(--muted)",
+										fontSize: "0.9rem",
+										fontWeight: 500,
+										letterSpacing: "0.02em",
+									}}
+								>
+									{s.label}
+								</div>
+							</div>
+						))}
 					</div>
 				</section>
 
