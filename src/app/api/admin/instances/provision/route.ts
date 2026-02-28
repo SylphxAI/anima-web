@@ -10,9 +10,14 @@ import { animaInstances } from "@/lib/db/schema";
 // Platform API client (internal)
 // ==========================================
 
-const PLATFORM_API_URL =
-	process.env.PLATFORM_API_URL ?? "https://sylphx.com";
+const PLATFORM_API_URL = process.env.PLATFORM_API_URL ?? "https://sylphx.com";
 const PLATFORM_API_TOKEN = process.env.PLATFORM_API_TOKEN ?? "";
+
+// Anima git repo — compose template source
+const ANIMA_GIT_REPO = "SylphxAI/anima";
+const ANIMA_COMPOSE_PATH = "instances/generic/docker-compose.yml";
+// Domain pattern for all Anima instances
+const ANIMA_DOMAIN_SUFFIX = "anima.sylphx.com";
 
 async function platformFetch(
 	path: string,
@@ -40,8 +45,7 @@ async function platformFetch(
 // ==========================================
 
 function checkAdminSecret(request: Request): boolean {
-	const secret = request.headers.get("x-admin-secret");
-	return secret === process.env.ADMIN_SECRET;
+	return request.headers.get("x-admin-secret") === process.env.ADMIN_SECRET;
 }
 
 // ==========================================
@@ -49,23 +53,26 @@ function checkAdminSecret(request: Request): boolean {
 // ==========================================
 
 /**
- * Provision a new Anima instance via Platform API.
+ * Provision a new Anima instance via Platform API (dogfooding path).
  *
- * This is the idiomatic dogfooding path: anima-web orchestrates the
- * full lifecycle (infrastructure + deploy) through Platform HTTP API
- * without any direct coupling to the underlying deploy infrastructure.
+ * Deployment: docker-compose git-based (SylphxAI/anima → instances/generic/docker-compose.yml)
+ * This compose template includes all required Docker options:
+ *   - /data:/data (JuiceFS persistent storage)
+ *   - /var/run/docker.sock (sandbox spawning)
+ *   - group_add: ["988"] (docker group)
+ *   - ulimits: nofile=65535
  *
  * Request body:
- *   slug            — unique identifier, e.g. "alice"
- *   displayName     — human-readable name, e.g. "Alice"
+ *   slug             — unique identifier, e.g. "alice"
+ *   displayName      — human-readable name, e.g. "Alice"
  *   telegramBotToken — Telegram bot token for this instance
- *   anthropicApiKey? — defaults to ANTHROPIC_API_KEY env var
- *   openAiApiKey?   — defaults to OPENAI_API_KEY env var
- *   gatewayToken?   — OpenClaw gateway token; defaults to GATEWAY_TOKEN env var
+ *   gatewayToken?    — OpenClaw gateway token (falls back to GATEWAY_TOKEN env)
+ *   platformToken?   — Pre-generated platform token (falls back to auto-generated)
+ *   databaseUrl?     — Database URL (falls back to Platform-provisioned DB)
  *
  * Returns:
  *   { slug, url, token, platformAppId, status: "deploying" }
- *   The token is returned ONCE and is never stored in plaintext.
+ *   token is returned ONCE and never stored in plaintext.
  */
 export async function POST(request: Request): Promise<NextResponse> {
 	if (!checkAdminSecret(request)) {
@@ -84,43 +91,40 @@ export async function POST(request: Request): Promise<NextResponse> {
 		slug,
 		displayName,
 		telegramBotToken,
-		anthropicApiKey,
-		openAiApiKey,
 		gatewayToken,
+		platformToken,
+		databaseUrl,
 	} = body as {
 		slug?: string;
 		displayName?: string;
 		telegramBotToken?: string;
-		anthropicApiKey?: string;
-		openAiApiKey?: string;
 		gatewayToken?: string;
+		platformToken?: string;
+		databaseUrl?: string;
 	};
 
-	if (!slug) {
+	// Validate required fields
+	if (!slug)
 		return NextResponse.json({ error: "slug is required" }, { status: 400 });
-	}
-	if (!displayName) {
+	if (!displayName)
 		return NextResponse.json(
 			{ error: "displayName is required" },
 			{ status: 400 },
 		);
-	}
-	if (!telegramBotToken) {
+	if (!telegramBotToken)
 		return NextResponse.json(
 			{ error: "telegramBotToken is required" },
 			{ status: 400 },
 		);
-	}
-	if (!/^[a-z0-9-]{2,48}$/.test(slug)) {
+	if (!/^[a-z0-9-]{2,48}$/.test(slug))
 		return NextResponse.json(
 			{
 				error: "slug must be 2–48 lowercase alphanumeric characters or hyphens.",
 			},
 			{ status: 400 },
 		);
-	}
 
-	// Check slug is not already taken in anima-web DB
+	// Check slug uniqueness in anima-web DB
 	const existing = await db.query.animaInstances.findFirst({
 		where: eq(animaInstances.slug, slug),
 	});
@@ -131,12 +135,23 @@ export async function POST(request: Request): Promise<NextResponse> {
 		);
 	}
 
-	// Generate instance registration token (returned once, stored as hash)
+	// Instance registration token (returned once, stored as hash)
 	const instanceToken = `anima_${randomBytes(32).toString("hex")}`;
 	const tokenHash = hashToken(instanceToken);
 
+	// Platform token for this instance (credential provider auth)
+	// Caller may supply an existing token; otherwise we generate one.
+	const instancePlatformToken =
+		platformToken ?? `anima_plat_${randomBytes(24).toString("hex")}`;
+
+	// Instance domain
+	const instanceDomain = `${slug}.${ANIMA_DOMAIN_SUFFIX}`;
+	const deployUrl = `https://${instanceDomain}`;
+
 	// ==========================================
 	// Step 1: Create app on Platform
+	// Uses docker-compose git deployment — NOT dockerImage.
+	// The compose template handles volumes, docker.sock, group_add, ulimits.
 	// ==========================================
 	let platformApp: {
 		id: string;
@@ -159,7 +174,12 @@ export async function POST(request: Request): Promise<NextResponse> {
 				name: displayName,
 				slug,
 				description: `Anima instance: ${displayName}`,
-				dockerImage: "ghcr.io/sylphxai/anima:latest",
+				dockerComposeGit: {
+					gitRepository: ANIMA_GIT_REPO,
+					gitBranch: "main",
+					dockerComposeLocation: ANIMA_COMPOSE_PATH,
+				},
+				domain: instanceDomain,
 				port: 3000,
 			}),
 		})) as { app: typeof platformApp };
@@ -173,41 +193,41 @@ export async function POST(request: Request): Promise<NextResponse> {
 		);
 	}
 
-	const deployUrl = `https://${slug}.sylphx.app`;
-	const animaWebUrl =
-		process.env.NEXT_PUBLIC_APP_URL ?? "https://anima.sylphx.com";
-
 	// ==========================================
-	// Step 2: Set environment variables on Platform
+	// Step 2: Set instance env vars via Platform
+	//
+	// PLATFORM_TOKEN: Anima agent authenticates with Sylphx Platform
+	//   (credential provider — currently passes through to env, future: Platform credential API)
+	// ANTHROPIC_API_KEY / OPENAI_API_KEY: AI credentials
+	//   (set as env vars; when Platform credential API exists, remove these)
 	// ==========================================
 	const envVars: Array<{ key: string; value: string }> = [
 		{ key: "INSTANCE_ID", value: slug },
-		{ key: "DATA_ROOT", value: "/data" },
-		{ key: "RUST_LOG", value: "anima=info,warn" },
-		{ key: "PORT", value: "3000" },
+		{ key: "PLATFORM_TOKEN", value: instancePlatformToken },
 		{ key: "TELEGRAM_BOT_TOKEN", value: telegramBotToken },
-		// Anima-web registry: lets the agent self-register its internal URL on boot
-		{ key: "ANIMA_WEB_URL", value: animaWebUrl },
-		{ key: "ANIMA_WEB_TOKEN", value: instanceToken },
+		{ key: "RUST_LOG", value: "anima=info,warn" },
 	];
 
-	if (anthropicApiKey ?? process.env.ANTHROPIC_API_KEY) {
-		envVars.push({
-			key: "ANTHROPIC_API_KEY",
-			value: anthropicApiKey ?? (process.env.ANTHROPIC_API_KEY as string),
-		});
+	// AI credentials — from anima-web defaults (set in its own env)
+	if (process.env.ANTHROPIC_API_KEY) {
+		envVars.push({ key: "ANTHROPIC_API_KEY", value: process.env.ANTHROPIC_API_KEY });
 	}
-	if (openAiApiKey ?? process.env.OPENAI_API_KEY) {
-		envVars.push({
-			key: "OPENAI_API_KEY",
-			value: openAiApiKey ?? (process.env.OPENAI_API_KEY as string),
-		});
+	if (process.env.OPENAI_API_KEY) {
+		envVars.push({ key: "OPENAI_API_KEY", value: process.env.OPENAI_API_KEY });
 	}
-	if (gatewayToken ?? process.env.GATEWAY_TOKEN) {
-		envVars.push({
-			key: "GATEWAY_TOKEN",
-			value: gatewayToken ?? (process.env.GATEWAY_TOKEN as string),
-		});
+
+	// Gateway token
+	const gtoken = gatewayToken ?? process.env.GATEWAY_TOKEN;
+	if (gtoken) {
+		envVars.push({ key: "GATEWAY_TOKEN", value: gtoken });
+	}
+
+	// Override DATABASE_URL if Platform didn't provision one or caller supplies it
+	const dbUrl =
+		databaseUrl ??
+		platformApp.infrastructure?.database?.url;
+	if (dbUrl) {
+		envVars.push({ key: "DATABASE_URL", value: dbUrl });
 	}
 
 	const envVarErrors: string[] = [];
@@ -217,7 +237,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 			body: JSON.stringify({ vars: envVars }),
 		});
 	} catch (err) {
-		// Non-fatal: env vars can be set manually if needed
 		envVarErrors.push(
 			`env-vars: ${err instanceof Error ? err.message : String(err)}`,
 		);
@@ -234,7 +253,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 		)) as { deploymentId?: string };
 		deploymentId = deployResult.deploymentId ?? null;
 	} catch (err) {
-		// Non-fatal: deploy can be triggered manually
 		envVarErrors.push(
 			`deploy: ${err instanceof Error ? err.message : String(err)}`,
 		);
@@ -263,7 +281,6 @@ export async function POST(request: Request): Promise<NextResponse> {
 			url: deployUrl,
 			platformAppId: platformApp.id,
 			deploymentId,
-			// Returned ONCE — not stored in plaintext
 			token: instanceToken,
 			status: "deploying",
 			warnings: envVarErrors.length > 0 ? envVarErrors : undefined,
