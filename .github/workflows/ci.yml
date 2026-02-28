@@ -8,10 +8,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Coolify redeployment
+      - name: Trigger redeployment via Platform API
         run: |
-          RESPONSE=$(curl -s -X GET \
-            "https://coolify.sylphx.com/api/v1/applications/gg00c4s4w0okg40g04wo08k0/start" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}")
-          echo "Coolify response: $RESPONSE"
-          echo "$RESPONSE" | grep -q "deployment_uuid" && echo "✅ Deployment queued" || (echo "❌ Failed" && exit 1)
+          RESPONSE=$(curl -s -X POST \
+            "https://sylphx.com/api/v1/apps/${{ vars.PLATFORM_APP_ID }}/deploy" \
+            -H "Authorization: Bearer ${{ secrets.PLATFORM_API_TOKEN }}" \
+            -H "Content-Type: application/json")
+          echo "Platform response: $RESPONSE"
+          # Accept both new deployment and already-queued as success
+          echo "$RESPONSE" | grep -qE '"deploymentId"|already' && echo "✅ Deployment triggered" || (echo "❌ Failed: $RESPONSE" && exit 1)
