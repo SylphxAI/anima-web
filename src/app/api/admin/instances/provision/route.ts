@@ -168,7 +168,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 	};
 
 	try {
-		const result = (await platformFetch("/api/v1/apps", {
+		const result = (await platformFetch("/api/v1/projects", {
 			method: "POST",
 			body: JSON.stringify({
 				name: displayName,
@@ -232,7 +232,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
 	const envVarErrors: string[] = [];
 	try {
-		await platformFetch(`/api/v1/apps/${platformApp.id}/env-vars`, {
+		await platformFetch(`/api/v1/projects/${platformApp.id}/env-vars`, {
 			method: "POST",
 			body: JSON.stringify({ vars: envVars }),
 		});
@@ -248,7 +248,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 	let deploymentId: string | null = null;
 	try {
 		const deployResult = (await platformFetch(
-			`/api/v1/apps/${platformApp.id}/deploy`,
+			`/api/v1/projects/${platformApp.id}/deploy`,
 			{ method: "POST" },
 		)) as { deploymentId?: string };
 		deploymentId = deployResult.deploymentId ?? null;
