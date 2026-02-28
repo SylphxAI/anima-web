@@ -208,12 +208,15 @@ export async function POST(request: Request): Promise<NextResponse> {
 		{ key: "RUST_LOG", value: "anima=info,warn" },
 	];
 
-	// AI credentials — from anima-web defaults (set in its own env)
-	if (process.env.ANTHROPIC_API_KEY) {
-		envVars.push({ key: "ANTHROPIC_API_KEY", value: process.env.ANTHROPIC_API_KEY });
+	// Platform AI Gateway: use the production SDK secret key for AI requests
+	// This key authenticates Anima to the Platform's /api/v1/chat/completions endpoint.
+	// The X-Instance-ID header (set by Anima at runtime) provides per-instance attribution.
+	const prodEnv = platformApp.environments.find((e) => e.envType === "production");
+	if (prodEnv?.secretKey) {
+		envVars.push({ key: "PLATFORM_AI_KEY", value: prodEnv.secretKey });
 	}
-	if (process.env.OPENAI_API_KEY) {
-		envVars.push({ key: "OPENAI_API_KEY", value: process.env.OPENAI_API_KEY });
+	if (process.env.PLATFORM_GATEWAY_URL) {
+		envVars.push({ key: "PLATFORM_GATEWAY_URL", value: process.env.PLATFORM_GATEWAY_URL });
 	}
 
 	// Gateway token
