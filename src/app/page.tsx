@@ -15,7 +15,7 @@ export default async function Home() {
 	let stats: Stats = { instances: 0, totalMessages: 0, totalUsers: 0, orgs: 0 };
 	try {
 		const res = await fetch(
-			`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://anima.sylphx.com"}/api/stats`,
+			`${process.env.NEXT_PUBLIC_BASE_URL ?? "https://spiron.sylphx.com"}/api/stats`,
 			{
 				next: { revalidate: 60 },
 			},
@@ -57,7 +57,7 @@ export default async function Home() {
 								color: "#ffffff",
 							}}
 						>
-							anima
+							spiron
 						</span>
 						<span
 							style={{
@@ -197,7 +197,7 @@ export default async function Home() {
 								margin: "0 auto 2.5rem",
 							}}
 						>
-							Anima deploys autonomous agents into your business workflows. They communicate, take
+							Spiron deploys autonomous agents into your business workflows. They communicate, take
 							action, and improve — without you managing them.
 						</p>
 
@@ -356,7 +356,7 @@ export default async function Home() {
 									marginBottom: "1rem",
 								}}
 							>
-								Why Anima
+								Why Spiron
 							</p>
 							<h2
 								style={{
@@ -377,7 +377,7 @@ export default async function Home() {
 									margin: "0 auto",
 								}}
 							>
-								Not another chatbot wrapper. Anima is infrastructure for autonomous work.
+								Not another chatbot wrapper. Spiron is infrastructure for autonomous work.
 							</p>
 						</div>
 
@@ -503,19 +503,19 @@ export default async function Home() {
 								{
 									num: "1",
 									title: "We configure",
-									desc: "Anima is set up for your specific workflows and connected to your tools.",
+									desc: "Spiron is set up for your specific workflows and connected to your tools.",
 									delay: "delay-100",
 								},
 								{
 									num: "2",
 									title: "You connect",
-									desc: "Point your channels (Telegram bot, webhooks, etc.) to your Anima endpoint.",
+									desc: "Point your channels (Telegram bot, webhooks, etc.) to your Spiron endpoint.",
 									delay: "delay-200",
 								},
 								{
 									num: "3",
 									title: "It works",
-									desc: "Your team interacts naturally. Anima handles the rest.",
+									desc: "Your team interacts naturally. Spiron handles the rest.",
 									delay: "delay-300",
 								},
 							].map((s) => (
@@ -598,7 +598,7 @@ export default async function Home() {
 									margin: "0 auto",
 								}}
 							>
-								Anima adapts to your organisation — not the other way around.
+								Spiron adapts to your organisation — not the other way around.
 							</p>
 						</div>
 
@@ -799,7 +799,7 @@ export default async function Home() {
 									}}
 								>
 									<span style={{ fontSize: "1.5rem", fontWeight: 700, letterSpacing: "-0.02em" }}>
-										anima
+										spiron
 									</span>
 									<span
 										style={{
@@ -837,7 +837,7 @@ export default async function Home() {
 										marginBottom: "1.25rem",
 									}}
 								>
-									Interested in Anima for your organisation? Reach out.
+									Interested in Spiron for your organisation? Reach out.
 								</p>
 								<a
 									href="mailto:hello@sylphx.com"

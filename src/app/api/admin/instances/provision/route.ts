@@ -13,11 +13,11 @@ import { animaInstances } from "@/lib/db/schema";
 const PLATFORM_API_URL = process.env.PLATFORM_API_URL ?? "https://sylphx.com";
 const PLATFORM_API_TOKEN = process.env.PLATFORM_API_TOKEN ?? "";
 
-// Anima git repo — compose template source
-const ANIMA_GIT_REPO = "SylphxAI/anima";
+// Spiron git repo — compose template source
+const SPIRON_GIT_REPO = "SylphxAI/spiron";
 const ANIMA_COMPOSE_PATH = "instances/generic/docker-compose.yml";
-// Domain pattern for all Anima instances
-const ANIMA_DOMAIN_SUFFIX = "anima.sylphx.com";
+// Domain pattern for all Spiron instances
+const SPIRON_DOMAIN_SUFFIX = "spiron.sylphx.com";
 
 async function platformFetch(
 	path: string,
@@ -53,9 +53,9 @@ function checkAdminSecret(request: Request): boolean {
 // ==========================================
 
 /**
- * Provision a new Anima instance via Platform API (dogfooding path).
+ * Provision a new Spiron instance via Platform API (dogfooding path).
  *
- * Deployment: docker-compose git-based (SylphxAI/anima → instances/generic/docker-compose.yml)
+ * Deployment: docker-compose git-based (SylphxAI/spiron → instances/generic/docker-compose.yml)
  * This compose template includes all required Docker options:
  *   - /data:/data (JuiceFS persistent storage)
  *   - /var/run/docker.sock (sandbox spawning)
@@ -124,7 +124,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 			{ status: 400 },
 		);
 
-	// Check slug uniqueness in anima-web DB
+	// Check slug uniqueness in spiron-web DB
 	const existing = await db.query.animaInstances.findFirst({
 		where: eq(animaInstances.slug, slug),
 	});
@@ -145,7 +145,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 		platformToken ?? `anima_plat_${randomBytes(24).toString("hex")}`;
 
 	// Instance domain
-	const instanceDomain = `${slug}.${ANIMA_DOMAIN_SUFFIX}`;
+	const instanceDomain = `${slug}.${SPIRON_DOMAIN_SUFFIX}`;
 	const deployUrl = `https://${instanceDomain}`;
 
 	// ==========================================
@@ -173,9 +173,9 @@ export async function POST(request: Request): Promise<NextResponse> {
 			body: JSON.stringify({
 				name: displayName,
 				slug,
-				description: `Anima instance: ${displayName}`,
+				description: `Spiron instance: ${displayName}`,
 				dockerComposeGit: {
-					gitRepository: ANIMA_GIT_REPO,
+					gitRepository: SPIRON_GIT_REPO,
 					gitBranch: "main",
 					dockerComposeLocation: ANIMA_COMPOSE_PATH,
 				},
@@ -196,7 +196,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 	// ==========================================
 	// Step 2: Set instance env vars via Platform
 	//
-	// PLATFORM_TOKEN: Anima agent authenticates with Sylphx Platform
+	// PLATFORM_TOKEN: Spiron agent authenticates with Sylphx Platform
 	//   (credential provider — currently passes through to env, future: Platform credential API)
 	// ANTHROPIC_API_KEY / OPENAI_API_KEY: AI credentials
 	//   (set as env vars; when Platform credential API exists, remove these)
@@ -205,12 +205,12 @@ export async function POST(request: Request): Promise<NextResponse> {
 		{ key: "INSTANCE_ID", value: slug },
 		{ key: "PLATFORM_TOKEN", value: instancePlatformToken },
 		{ key: "TELEGRAM_BOT_TOKEN", value: telegramBotToken },
-		{ key: "RUST_LOG", value: "anima=info,warn" },
+		{ key: "RUST_LOG", value: "spiron=info,warn" },
 	];
 
 	// Platform AI Gateway: use the production SDK secret key for AI requests
-	// This key authenticates Anima to the Platform's /api/v1/chat/completions endpoint.
-	// The X-Instance-ID header (set by Anima at runtime) provides per-instance attribution.
+	// This key authenticates Spiron to the Platform's /api/v1/chat/completions endpoint.
+	// The X-Instance-ID header (set by Spiron at runtime) provides per-instance attribution.
 	const prodEnv = platformApp.environments.find((e) => e.envType === "production");
 	if (prodEnv?.secretKey) {
 		envVars.push({ key: "PLATFORM_AI_KEY", value: prodEnv.secretKey });
@@ -262,7 +262,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 	}
 
 	// ==========================================
-	// Step 4: Register instance in anima-web DB
+	// Step 4: Register instance in spiron-web DB
 	// ==========================================
 	const [instance] = await db
 		.insert(animaInstances)

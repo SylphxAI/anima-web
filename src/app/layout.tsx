@@ -9,28 +9,28 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-	metadataBase: new URL("https://anima.sylphx.com"),
+	metadataBase: new URL("https://spiron.sylphx.com"),
 	title: {
-		default: "Anima — AI Agents for Enterprise",
-		template: "%s | Anima",
+		default: "Spiron — AI Agents for Enterprise",
+		template: "%s | Spiron",
 	},
 	description:
 		"Deploy autonomous AI agents across your tools and channels — privately, on your infrastructure. Built for enterprise.",
-	keywords: ["AI agents", "enterprise AI", "autonomous agents", "AI automation", "Anima"],
-	authors: [{ name: "Anima", url: "https://anima.sylphx.com" }],
-	creator: "Anima",
+	keywords: ["AI agents", "enterprise AI", "autonomous agents", "AI automation", "Spiron"],
+	authors: [{ name: "Spiron", url: "https://spiron.sylphx.com" }],
+	creator: "Spiron",
 	openGraph: {
-		title: "Anima — AI Agents for Enterprise",
+		title: "Spiron — AI Agents for Enterprise",
 		description:
 			"Deploy autonomous AI agents across your tools and channels — privately, on your infrastructure.",
-		url: "https://anima.sylphx.com",
-		siteName: "Anima",
+		url: "https://spiron.sylphx.com",
+		siteName: "Spiron",
 		images: [
 			{
 				url: "/og-image.png",
 				width: 1200,
 				height: 630,
-				alt: "Anima — AI Agents for Enterprise",
+				alt: "Spiron — AI Agents for Enterprise",
 			},
 		],
 		locale: "en_US",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "Anima — AI Agents for Enterprise",
+		title: "Spiron — AI Agents for Enterprise",
 		description:
 			"Deploy autonomous AI agents across your tools and channels — privately, on your infrastructure.",
 		images: ["/og-image.png"],
@@ -63,16 +63,16 @@ export const metadata: Metadata = {
 	},
 	manifest: "/site.webmanifest",
 	alternates: {
-		canonical: "https://anima.sylphx.com",
+		canonical: "https://spiron.sylphx.com",
 	},
 };
 
 const jsonLd = {
 	"@context": "https://schema.org",
 	"@type": "Organization",
-	name: "Anima",
-	url: "https://anima.sylphx.com",
-	logo: "https://anima.sylphx.com/icon-512.png",
+	name: "Spiron",
+	url: "https://spiron.sylphx.com",
+	logo: "https://spiron.sylphx.com/icon-512.png",
 	description:
 		"Deploy autonomous AI agents across your tools and channels — privately, on your infrastructure. Built for enterprise.",
 	contactPoint: {

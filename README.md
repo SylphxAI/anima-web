@@ -1,16 +1,16 @@
-# Anima
+# Spiron
 
 **AI agents that actually work.**
 
-Anima deploys autonomous AI agents into your business workflows. Persistent teams, Docker-isolated sub-agents, 4-stage semantic memory, zero credential leakage.
+Spiron deploys autonomous AI agents into your business workflows. Persistent teams, Docker-isolated sub-agents, 4-stage semantic memory, zero credential leakage.
 
-→ **[anima.sylphx.com](https://anima.sylphx.com)**
+→ **[spiron.sylphx.com](https://spiron.sylphx.com)**
 
 ---
 
 ## What It Does
 
-Most AI platforms give you a chatbot. Anima gives you a workforce.
+Most AI platforms give you a chatbot. Spiron gives you a workforce.
 
 - **Persistent teams** — agents survive server restarts, communicate via inboxes and broadcast channels
 - **Isolation by architecture** — every sub-agent runs in a Docker container. Not opt-in. Enforced.
@@ -26,7 +26,7 @@ Most AI platforms give you a chatbot. Anima gives you a workforce.
 
 ## Built On
 
-Anima runs entirely on the [Sylphx Platform](https://sylphx.com) — our own AI-native PaaS. It's Customer Zero: proof that one key and 19 production services can run a full autonomous AI workforce in production.
+Spiron runs entirely on the [Sylphx Platform](https://sylphx.com) — our own AI-native PaaS. It's Customer Zero: proof that one key and 19 production services can run a full autonomous AI workforce in production.
 
 ---
 

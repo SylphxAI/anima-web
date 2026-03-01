@@ -30,6 +30,6 @@ export async function POST(request: Request) {
 	return NextResponse.json({
 		ok: true,
 		slug: instance.slug,
-		webhookBase: `https://anima.sylphx.com/${instance.slug}`,
+		webhookBase: `https://spiron.sylphx.com/${instance.slug}`,
 	});
 }
