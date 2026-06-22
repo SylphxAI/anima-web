@@ -5,6 +5,7 @@
     "name": "Anima Web",
     "lifecycle": "production",
     "layer": "application",
+    "policyPool": "webpool",
     "summary": "Production web and provisioning surface currently presenting the Spiron AI-agent workforce product, owning the Next.js marketing/provisioning app, Telegram webhook ingress, instance APIs, database schema, Docker build input, and push-triggered platform redeploy workflow.",
     "goals": [
       "Present and operate the public web surface for the Spiron/Anima agent product.",
@@ -112,6 +113,7 @@
   },
   "delivery": {
     "ciModel": "legacy-ci",
+    "deployable": true,
     "requiredContexts": [],
     "deployPath": ".github/workflows/ci.yml triggers a Sylphx Platform API redeploy on main using PLATFORM_APP_ID and PLATFORM_API_TOKEN. Dockerfile defines the web image. No PR CI or required PR status context is currently configured.",
     "productionProof": "Behavior changes require build validation, migration proof for schema changes, platform deploy/readback, and smoke evidence for affected public, webhook, or provisioning routes. Manifest-only changes are proven by the doctrine project-control audit.",
