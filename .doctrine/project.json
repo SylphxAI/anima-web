@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "project": {
+    "repo": "SylphxAI/anima-web",
+    "name": "Anima Web",
+    "lifecycle": "production",
+    "layer": "application",
+    "summary": "Production web and provisioning surface currently presenting the Spiron AI-agent workforce product, owning the Next.js marketing/provisioning app, Telegram webhook ingress, instance APIs, database schema, Docker build input, and push-triggered platform redeploy workflow.",
+    "goals": [
+      "Present and operate the public web surface for the Spiron/Anima agent product.",
+      "Own instance registration, admin instance provisioning, stats, and Telegram webhook ingress implemented in this web app.",
+      "Keep web/provisioning behavior separate from the underlying agent runtime and platform infrastructure."
+    ],
+    "nonGoals": [
+      "Do not own the Spiron agent runtime, sub-agent execution engine, memory system, or platform compute substrate.",
+      "Do not own Sylphx Platform internals, central CI runners, enterprise release bots, or organization-wide delivery policy.",
+      "Do not add product-runtime internals to the web/provisioning boundary."
+    ]
+  },
+  "boundaries": {
+    "owns": [
+      {
+        "name": "anima-web-surface",
+        "description": "Next.js public web application, marketing surface, public stats route, and product presentation for the Spiron/Anima agent product."
+      },
+      {
+        "name": "anima-provisioning-api",
+        "description": "Instance registration, admin instance provisioning, Telegram webhook ingress, and related database schema in this web app."
+      },
+      {
+        "name": "anima-web-delivery",
+        "description": "Docker build input and push-triggered platform redeploy workflow for the web/provisioning service."
+      }
+    ],
+    "doesNotOwn": [
+      "Spiron agent runtime, sub-agent execution engine, semantic memory system, or platform compute substrate.",
+      "Sylphx Platform internals, runner fleet, reusable deployment infrastructure, organization-wide rulesets, or enterprise release bot implementation.",
+      "Customer-specific agent behavior or agent workflow logic outside the web/provisioning boundary."
+    ],
+    "publicSurfaces": [
+      {
+        "type": "api",
+        "name": "Public web routes",
+        "location": "src/app/"
+      },
+      {
+        "type": "api",
+        "name": "Telegram webhook ingress",
+        "location": "src/app/[slug]/webhook/telegram/[...path]/route.ts"
+      },
+      {
+        "type": "api",
+        "name": "Instance registration and provisioning APIs",
+        "location": "src/app/api/"
+      },
+      {
+        "type": "manifest",
+        "name": "Database schema and migrations",
+        "location": "drizzle/"
+      },
+      {
+        "type": "workflow",
+        "name": "Push-triggered platform redeploy",
+        "location": ".github/workflows/ci.yml"
+      }
+    ],
+    "allowedDependencies": [
+      {
+        "repo": "SylphxAI/spiron",
+        "surface": "published agent product/runtime APIs or deployment status only",
+        "direction": "peer-public"
+      },
+      {
+        "repo": "SylphxAI/platform",
+        "surface": "public platform deploy, database, runtime, and webhook support surfaces only",
+        "direction": "peer-public"
+      },
+      {
+        "repo": "SylphxAI/doctrine",
+        "surface": "project manifest schema, standards, and rollout audit",
+        "direction": "downward"
+      }
+    ],
+    "forbiddenCouplings": [
+      "Do not implement or patch the Spiron agent runtime, memory engine, or execution substrate in this web repository.",
+      "Do not reach into Sylphx Platform internals instead of public platform surfaces.",
+      "Do not store webhook secrets, platform API tokens, or environment-specific credentials in source.",
+      "Do not treat source revert as sufficient recovery for webhook ingress, instance provisioning, database migrations, or deployed service side effects."
+    ]
+  },
+  "documentation": {
+    "adr": {
+      "path": "docs/adr/",
+      "status": "planned"
+    },
+    "specs": {
+      "path": "README.md",
+      "status": "present"
+    },
+    "catalog": {
+      "path": ".doctrine/project.json",
+      "status": "present"
+    },
+    "runbooks": {
+      "path": "PROJECT.md",
+      "status": "present"
+    },
+    "generatedReferences": {
+      "path": "bun.lock",
+      "status": "present"
+    }
+  },
+  "delivery": {
+    "ciModel": "legacy-ci",
+    "requiredContexts": [],
+    "deployPath": ".github/workflows/ci.yml triggers a Sylphx Platform API redeploy on main using PLATFORM_APP_ID and PLATFORM_API_TOKEN. Dockerfile defines the web image. No PR CI or required PR status context is currently configured.",
+    "productionProof": "Behavior changes require build validation, migration proof for schema changes, platform deploy/readback, and smoke evidence for affected public, webhook, or provisioning routes. Manifest-only changes are proven by the doctrine project-control audit.",
+    "recoveryClass": "forward-fix-only"
+  },
+  "commercial": {
+    "status": "researching",
+    "decisionHome": "docs/adr/ for product positioning, pricing, packaging, roadmap, and provisioning-commercial decisions.",
+    "pricingSourceOfTruth": "No repo-local pricing SSOT is declared; future pricing must use the owning Spiron/Anima or billing product source of truth.",
+    "metricsSourceOfTruth": "No repo-local funnel or revenue metrics SSOT is declared; future commercial decisions must cite the owning analytics source.",
+    "requiredRecords": [
+      "pricing",
+      "packaging",
+      "roadmap",
+      "market-positioning"
+    ],
+    "guardrails": [
+      "No pricing, packaging, product-positioning, or paid provisioning change without a Commercial ADR.",
+      "Do not implement Spiron runtime commercial behavior in the web/provisioning boundary.",
+      "Webhook, provisioning, and instance side effects require forward-only recovery planning and smoke evidence."
+    ]
+  },
+  "adoption": {
+    "status": "baseline",
+    "gaps": [
+      {
+        "id": "no-pr-ci",
+        "description": "Repository has a push-triggered deployment workflow but no pull-request CI gate for web, database, or provisioning changes.",
+        "owner": "SylphxAI/anima-web",
+        "target": "Future CI adoption issue"
+      },
+      {
+        "id": "central-admission-not-adopted",
+        "description": "Repository has not adopted central ADR-29 stable admission fan-in contexts.",
+        "owner": "SylphxAI/doctrine#61",
+        "target": "Central CI runner and admission control plane"
+      },
+      {
+        "id": "runtime-boundary-proof-missing",
+        "description": "The boundary between Anima Web provisioning and the Spiron agent runtime is documented but not yet enforced by generated contracts or stable release-evidence checks.",
+        "owner": "SylphxAI/anima-web",
+        "target": "Future boundary contract issue"
+      }
+    ]
+  }
+}
